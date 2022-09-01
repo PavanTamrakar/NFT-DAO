@@ -79,3 +79,12 @@ contract GandhiDAO is Ownable {
 
         numProposals -1;
     }
+    
+    function voteOnProposal(uint256 proposalId, Vote vote) external nftHolderOnly activeProposalOnly(proposalId){
+        Proposal storage proposal = proposals[proposalId];
+
+        uint256 voterNftBalance = GandhiMoneyNFT.balanceOf(msg.sender);
+        
+    }
+
+}
