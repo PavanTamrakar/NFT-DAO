@@ -84,7 +84,44 @@ contract GandhiDAO is Ownable {
         Proposal storage proposal = proposals[proposalId];
 
         uint256 voterNftBalance = GandhiMoneyNFT.balanceOf(msg.sender);
-        
+
+        uint256 numVotes;
+
+        for (i = 0; i < voterNftBalance; ++i){
+            uint256 tokenId = GandhiMoneyNFT.balanceOfOwnerByIndex(msg.sender, i);
+            if (proposal.voters[tokenId] == false){
+                numVotes++;
+                proposal.voters[tokenId] = true;
+            }
+        }
+
+        require(numVotes > 0, "Already Voted!");
+
+        if (vote == Vote.yes){
+            proposal.yesVotes += numVotes;
+        }else{
+            proposal.noVotes += numVotes;
+        }
     }
+
+    function executeProposal(uint256 proposalId) external nftHolderOnly inActiveProposalOnly(proposalId){
+        Proposal storage proposal = proposals[proposalId];
+
+        if (proposal.yesVotes > proposal.noVotes){
+            uint256 nftPrice = nftMarketplace.getPrice();
+            require(address(this).balance >= nftPrice, "Not Enough Funds");
+            nftMarketPlace.purchase{vakue: nftPrice}(proposal.nftTokenId);
+        }
+
+        proposal.executed = true;
+    }
+    
+    function withdrawEther() external onlyOwner {
+        payable(owner()).transfer(address(this).balance);
+    }
+
+    receive() external payable {}
+
+    fallback() external payable {}
 
 }
